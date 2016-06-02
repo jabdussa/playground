@@ -16,10 +16,14 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import java.io.IOException
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import scala.math._
+//import scala.math._
 import spray.json.DefaultJsonProtocol
 
+import io.collectx.mobilevoter.models.IpPairSummary
 
+
+
+import io.collectx.mobilevoter.models._
 
 /*
 
@@ -94,12 +98,12 @@ trait Service
     def config: Config
     val logger: LoggingAdapter
 
-    lazy val ipApiConnectionFlow: Flow[HttpRequest, HttpResponse, Any] =
-      Http().outgoingConnection(config.getString("services.ip-api.host"), config.getInt("services.ip-api.port"))
+    lazy val ipApiConnectionFlow: Flow[HttpRequest, HttpResponse, Any] = Http().outgoingConnection(config.getString("services.ip-api.host"), config.getInt("services.ip-api.port"))
 
     def ipApiRequest(request: HttpRequest): Future[HttpResponse] = Source.single(request).via(ipApiConnectionFlow).runWith(Sink.head)
 
     def fetchIpInfo(ip: String): Future[Either[String, IpInfo]] = {
+
       ipApiRequest(RequestBuilding.Get(s"/json/$ip")).flatMap { response =>
         response.status match {
           case OK => Unmarshal(response.entity).to[IpInfo].map(Right(_))
@@ -111,7 +115,9 @@ trait Service
           }
         }
       }
+
     }
+
 
     val routes = {
       logRequestResult("akka-http-microservice") {
@@ -123,20 +129,23 @@ trait Service
                 case Left(errorMessage) => BadRequest -> errorMessage
               }
             }
-          } ~
-            (post & entity(as[IpPairSummaryRequest])) { ipPairSummaryRequest =>
-              complete {
-                val ip1InfoFuture = fetchIpInfo(ipPairSummaryRequest.ip1)
-                val ip2InfoFuture = fetchIpInfo(ipPairSummaryRequest.ip2)
-                ip1InfoFuture.zip(ip2InfoFuture).map[ToResponseMarshallable] {
-                  case (Right(info1), Right(info2)) => IpPairSummary(info1, info2)
-                  case (Left(errorMessage), _) => BadRequest -> errorMessage
-                  case (_, Left(errorMessage)) => BadRequest -> errorMessage
-                }
-              }
+          } ~ (post & entity(as[IpPairSummaryRequest])) {
+                ipPairSummaryRequest =>
+                  complete {
+                    val ip1InfoFuture = fetchIpInfo(ipPairSummaryRequest.ip1)
+                    val ip2InfoFuture = fetchIpInfo(ipPairSummaryRequest.ip2)
+
+                    ip1InfoFuture.zip(ip2InfoFuture).map[ToResponseMarshallable] {
+                      case (Right(info1), Right(info2)) => IpPairSummary(info1, info2)
+                      case (Left(errorMessage), _) => BadRequest -> errorMessage
+                      case (_, Left(errorMessage)) => BadRequest -> errorMessage
+                    }
+                  }
             }
         }
       }
     }
+
+
   }
 

@@ -1,6 +1,5 @@
-package io.collectx.mobilevoter
+package io.collectx.mobilevoter.models
 
-import scala.math._
 
 case class HtmlMsg(data: String)
 
@@ -8,7 +7,9 @@ case class IpInfo(query: String, country: Option[String], city: Option[String], 
 
 case class IpPairSummaryRequest(ip1: String, ip2: String)
 
-case class IpPairSummary(distance: Option[Double], ip1Info: IpInfo, ip2Info: IpInfo)
+// case class IpPairSummary(distance: Option[Double], ip1Info: IpInfo, ip2Info: IpInfo)
+
+/*
 
 object IpPairSummary {
 
@@ -31,3 +32,5 @@ object IpPairSummary {
 
   private val EarthRadius = 6371.0
 }
+
+*/

@@ -15,6 +15,7 @@ import scala.io.Source
 import scala.concurrent.Future
 import com.typesafe.config.ConfigFactory
 
+import io.collectx.mobilevoter.models._
 
 
 class Load extends Actor 
