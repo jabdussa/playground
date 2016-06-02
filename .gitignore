@@ -1,25 +1,11 @@
 *.class
 *.log
 
-# sbt specific
+# SBT SPECIFIC
 .cache
 .history
 .lib/
-dist/*
-target/
-lib_managed/
-src_managed/
-project/boot/
-project/plugins/project/
-project/project
-project/project/*
-project/target/
-project/target/*
 
-notes
-notes/*
-
-# Scala-IDE specific
 .scala_dependencies
 
 .worksheet
@@ -27,11 +13,45 @@ notes/*
 .worksheets/
 .worksheets/*
 
-worksheets
-worksheets/*
-
 .idea
 .idea/
+.idea/*
 
 *.iml
 .iml
+
+
+## VI
+.swp
+*.swp
+.swo
+*.swo
+
+dist/*
+
+lib_managed/
+
+project/boot/
+project/boot/*
+
+project/project
+project/project/*
+
+project/plugins/project/
+project/plugins/project/*
+
+project/target/
+project/target/*
+
+logs
+logs/*
+
+notes
+notes/*
+
+src_managed/
+
+target/
+
+worksheets
+worksheets/*
