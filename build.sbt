@@ -6,7 +6,7 @@ organization := "io.collectx"
 
 version := "1.0"
 
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.8"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
@@ -35,4 +35,4 @@ libraryDependencies ++= {
   )
 }
 
-//Revolver.setting
+Revolver.settings
