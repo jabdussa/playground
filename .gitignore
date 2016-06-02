@@ -26,3 +26,5 @@ notes/*
 .idea
 .idea/
 
+*.iml
+.iml
