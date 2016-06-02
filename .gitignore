@@ -16,9 +16,13 @@ project/project/*
 project/target/
 project/target/*
 
+notes
+notes/*
+
 # Scala-IDE specific
 .scala_dependencies
 .worksheet
 
 .idea
 .idea/
+
