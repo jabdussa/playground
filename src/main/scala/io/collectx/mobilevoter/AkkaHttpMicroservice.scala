@@ -1,3 +1,5 @@
+package io.collectx.mobilevoter
+
 import akka.actor.ActorSystem
 import akka.event.{LoggingAdapter, Logging}
 import akka.http.scaladsl.Http
@@ -8,7 +10,7 @@ import akka.http.scaladsl.model.{HttpResponse, HttpRequest}
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{Actormat, mat}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -53,7 +55,7 @@ trait Protocols extends DefaultJsonProtocol {
 trait Service extends Protocols {
   implicit val system: ActorSystem
   implicit def executor: ExecutionContextExecutor
-  implicit val materializer: Materializer
+  implicit val mat: mat
 
   def config: Config
   val logger: LoggingAdapter
@@ -107,7 +109,7 @@ trait Service extends Protocols {
 object AkkaHttpMicroservice extends App with Service {
   override implicit val system = ActorSystem()
   override implicit val executor = system.dispatcher
-  override implicit val materializer = ActorMaterializer()
+  override implicit val mat = Actormat()
 
   override val config = ConfigFactory.load()
   override val logger = Logging(system, getClass)

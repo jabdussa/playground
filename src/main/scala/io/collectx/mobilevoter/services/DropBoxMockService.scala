@@ -7,6 +7,10 @@ package io.collectx.mobilevoter.services
   *
   *
   * http://www.lightbend.com/activator/template/akka-http-microservice
+  *
+  * https://github.com/adhoclabs/developer/blob/master/README.md/
+  *
+  *
   */
 
 
@@ -29,28 +33,71 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.math._
 import spray.json.DefaultJsonProtocol
 
+// POST https:\\mysite.com\my-powerful-burner-events -d '{ "type": "inboundMedia", "payload": "<picture url>", "fromNumber": "+12222222222", "toNumber": "+ 13333333333" }'
+case class MultiMediaEvent(kind: String, payload: String, fromNumber: String, toNumber: String)
 
-trait DropBoxMockService extends ModelsToJsonProtocols {
+// POST https:\\mysite.com\my-powerful-burner-events -d '{ "type": "inboundText", "payload": "Hello", "fromNumber": "+12222222222", "toNumber": "+13333333333" }'
+case class TextEvent(kind: String, payload: String, fromNumber: String, toNumber: String)
 
-  implicit val materializer: Materializer
-  private val ecStatusResponse = ECStatus("ok", "Welcome to Server")
 
-  val emailRoutes =
-    logRequestResult("email-service") {
-      pathPrefix("ec") {
-        (post & entity(as[ECFailure])) { ecFailure =>
-          complete {
-            Postman.send(TenantFailure(ecFailure.symbolicName) getMessage)
-            "OK"
-          }
-        }
-      } ~
-        path("") {
-          get {
-            complete {
-              ecStatusResponse
-            }
-          }
-        }
-    }
+trait Protocols
+  extends DefaultJsonProtocol {
+
+  implicit val mat: Materializer
+  implicit val multiMediaJson = jsonFormat4(MultiMediaEvent.apply)
+  implicit val textJson = jsonFormat4(TextEvent.apply)
+
 }
+
+trait EventListenerService extends Protocols {
+  implicit val system: ActorSystem
+  implicit def executor: ExecutionContextExecutor
+  implicit val mat: Materializer
+
+  def config: Config
+  val logger: LoggingAdapter
+
+  /**
+    * Dropbox request & response lazily instantiated and wrapped in a Flow
+    *
+    * "A Flowing Request & Response" :)
+    * 
+    */
+
+  lazy val dropBoxResponse: Flow[HttpRequest, HttpResponse, Any] =
+    Http().outgoingConnection(
+      config.getString("dropbox.host"),
+      config.getInt("dropbox.port")
+    )
+
+  /**
+    * NON Blocking call to DropBox API the response is wrapped in a future
+    *
+   */
+
+  def dropBoxCall(request: HttpRequest): Future[HttpResponse] =
+    Source.single(request).via(dropBoxResponse).runWith(Sink.head)
+
+ // fetchIpInfo
+
+  /**
+    * Entry point method called from Service
+    *
+    */
+
+  def go(ip: String): Future[Either[String, IpInfo]] = {
+    ipApiRequest(RequestBuilding.Get(s"/json/$ip")).flatMap { response =>
+      response.status match {
+        case OK => Unmarshal(response.entity).to[IpInfo].map(Right(_))
+        case BadRequest => Future.successful(Left(s"$ip: incorrect IP format"))
+        case _ => Unmarshal(response.entity).to[String].flatMap { entity =>
+          val error = s"FreeGeoIP request failed with status code ${response.status} and entity $entity"
+          logger.error(error)
+          Future.failed(new IOException(error))
+        }
+      }
+    }
+  }
+
+
+
